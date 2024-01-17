@@ -83,8 +83,13 @@ class App{
     #mapEvent;
     #workouts = [];
     constructor(){
-        
-        this._getPosition(); // to jest po to aby nie musiec ręczenie wywyływać funckji tylko od razu na stracie
+        // get users position
+        this._getPosition(); 
+
+        // get data from local storage
+        this._getLocalStorage();
+
+        // Attach event Handlers
         form.addEventListener('submit',this._newWorkout.bind(this))
         inputType.addEventListener('change',this._toggleElevationField)
         containerWorkouts.addEventListener('click',this._moveToPopup.bind(this)) // event delegation to cilds elemnts- because they dont exist yet!
@@ -115,6 +120,9 @@ class App{
             // Handling click on map
             this.#map.on('click',this._showForm.bind(this))
         }
+        this.#workouts.forEach( work =>{
+            this._renderWorkoutMarker(work)
+           })
     }
     _showForm(mapEvent){
         this.#mapEvent = mapEvent;
@@ -200,6 +208,8 @@ class App{
 
        this._hideForm()
         
+       // set localStorage to all workouts
+       this._setLocalStorage()
        
     }
 
@@ -216,7 +226,11 @@ class App{
         .setPopupContent(`${workout.type === 'running' ? "🏃‍♂️":"🚴‍♀️"} ${workout.description}`)
         .openPopup();
 
+
+
+
     }
+
 
     _renderWorkout(workout){
         let html = `
@@ -268,12 +282,12 @@ class App{
 
     _moveToPopup(e){
         const workoutEl = e.target.closest('.workout')
-        console.log(workoutEl)
+       
 
         if(!workoutEl) return;
 
         const workout = this.#workouts.find(work => work.id === workoutEl.dataset.id)
-        console.log(workout)
+       
 
 
         
@@ -286,7 +300,30 @@ class App{
          // leaflet method
 
          // using the public interafce
-         workout.click();
+        // workout.click();
+    }
+    _setLocalStorage(){
+        localStorage.setItem('workouts',JSON.stringify(this.#workouts))
+    }
+
+    _getLocalStorage(){
+       const data = JSON.parse(localStorage.getItem('workouts'))
+       
+
+       if (!data) return;
+        // restroing data
+       this.#workouts = data
+       this.#workouts.forEach( work =>{
+        this._renderWorkout(work)
+        
+       })
+
+       // OBJECTS COMMING FROM LOCAL STORAGE DONT INHERIT SOME METHODS
+    }
+
+    reset(){
+        localStorage.removeItem('workouts')
+        location.reload();
     }
 }
 
